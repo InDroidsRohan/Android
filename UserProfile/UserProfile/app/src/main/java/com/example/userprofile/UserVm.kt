@@ -10,8 +10,8 @@ import retrofit2.Call
 class UserVm : ViewModel() {
     val userRepo = UserRepo(getRetroFit().create(UserService::class.java))
 
-    fun createUser(user: User) {
-        userRepo.userService.createUser(user = user)
+    fun createUser(user: User): Call<Void>? {
+        return userRepo.userService.createUser(user = user)
     }
 
     fun getUser(email: String): Call<User?>? {

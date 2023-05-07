@@ -15,6 +15,8 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.*
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -73,25 +75,6 @@ fun profileScreen(viewModel: UserVm) {
         mutableStateOf(value = "Phone Number")
     }
 
-    viewModel.getUser("rohan@gmail.com")?.enqueue(object : retrofit2.Callback<User?> {
-        override fun onResponse(call: Call<User?>, response: Response<User?>) {
-            val user = response.body()
-            user?.let {
-                name = it.firstName + " " + it.lastName
-                userId = it.id.toString()
-                email = it.email
-                phone = it.phoneNumber
-                println("user ---- $user")
-            }
-        }
-
-        override fun onFailure(call: Call<User?>, t: Throwable) {
-            println("user ---- error")
-            t.printStackTrace()
-        }
-
-    })
-
     Column(
         modifier = Modifier
             .verticalScroll(rememberScrollState())
@@ -109,7 +92,27 @@ fun profileScreen(viewModel: UserVm) {
                 modifier = Modifier.clickable { notification.value = "Cancelled !" })
             Text(
                 text = "Save",
-                modifier = Modifier.clickable { notification.value = "Profile Updated !" })
+                modifier = Modifier.clickable {
+                    viewModel.createUser(User(1, email, name, "", phone, "Miner"))
+                        ?.enqueue(object : retrofit2.Callback<Void> {
+                            override fun onResponse(
+                                call: Call<Void>,
+                                response: Response<Void>
+                            ) {
+                                if (response.code() == 208)
+                                    notification.value = "Profile already Updated !"
+                                else
+                                    notification.value = "Profile Updated !"
+                            }
+
+                            override fun onFailure(call: Call<Void>, t: Throwable) {
+                                notification.value = "Profile Update Error"
+                                t.printStackTrace()
+                            }
+
+                        })
+
+                })
         }
         profileImage()
         Row(
@@ -177,6 +180,44 @@ fun profileScreen(viewModel: UserVm) {
                     backgroundColor = Color.Transparent,
                     textColor = Color.Black
                 )
+            )
+        }
+
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(all = 16.dp), verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.Center
+        )
+        {
+            ExtendedFloatingActionButton(
+                onClick = {
+
+                    viewModel.getUser(email)
+                        ?.enqueue(object : retrofit2.Callback<User?> {
+                            override fun onResponse(call: Call<User?>, response: Response<User?>) {
+                                val user = response.body()
+                                user?.let {
+                                    name = it.firstName + " " + it.lastName
+                                    userId = it.id.toString()
+                                    email = it.email
+                                    phone = it.phoneNumber
+                                }
+                            }
+
+                            override fun onFailure(call: Call<User?>, t: Throwable) {
+                                t.printStackTrace()
+                            }
+
+                        })
+                },
+                icon = {
+                    Icon(
+                        Icons.Filled.Refresh,
+                        contentDescription = "Check Email"
+                    )
+                },
+                text = { Text("Refresh") }
             )
         }
     }

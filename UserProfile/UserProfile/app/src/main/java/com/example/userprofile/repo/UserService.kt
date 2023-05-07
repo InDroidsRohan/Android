@@ -7,8 +7,10 @@ import retrofit2.http.*
 
 interface UserService {
     @POST("api/user/info")
-    fun createUser(@Body user: User?): Call<User?>?
+    @Headers("Content-Type: application/json")
+    fun createUser(@Body user: User): Call<Void>?
 
     @GET("/api/user/info?")
+    @Headers("Content-Type: application/json")
     fun getUser(@Query("email") id: String): Call<User?>?
 }
